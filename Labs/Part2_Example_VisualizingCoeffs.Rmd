@@ -1,0 +1,36 @@
+---
+title: "Example_Part2_VisualizingRegressionCoeff_coefplot"
+output: html_document
+date: "2024-04-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries
+```{r}
+library("arm")
+library("car")
+```
+
+## Load Data
+```{r}
+data("Mroz")
+```
+
+## Run regression models.
+
+Here we create 3 models using the glm() command. Regressing lfp on all variables.
+```{r}
+M1<-      glm(lfp ~ ., data = Mroz, family = binomial)
+M2<- bayesglm(lfp ~ ., data = Mroz, family = binomial)
+M3<-      glm(lfp ~ ., data = Mroz, family = binomial(probit))
+```
+
+## Visualize coefficients using coefplot()
+```{r}
+coefplot(M2, xlim=c(-2, 6),            intercept=TRUE)
+coefplot(M1, add=TRUE, col.pts="red",  intercept=TRUE)
+coefplot(M3, add=TRUE, col.pts="blue", intercept=TRUE, offset=0.2)
+```
