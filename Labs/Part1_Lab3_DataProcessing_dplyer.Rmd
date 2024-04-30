@@ -1,0 +1,352 @@
+---
+title: "Lab3 - Fall 2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## dplyr tutorial
+
+-   This lab is based on an past dplyr tutorial <https://rpubs.com/justmarkham/dplyr-tutorial>. I've only updated a few commands and added some examples.
+-   Pronounced d-plier.
+-   A grammar for data manipulation (and by extention data science)!
+-   Great for data exploration and transformation
+-   Intuitive to write and easy to read, especially when using the *chaining* syntax (see below)
+-   Fast on data frames
+
+## dplyr functionality
+
+-   Five basic verbs: filter, select, arrange, mutate, summarise (plus group_by)
+-   Greatly enhanced by chaining"
+-   Can work with data stored in databases and data tables
+-   Joins: inner join, left join, semi-join, anti-join (not covered below)
+-   Window functions for calculating ranking, offsets, and more (not covered below)
+
+Make sure you have the following R packages installed: dplyr, ggplot, and hflights. E.g.
+
+```{r, eval=FALSE}
+install.packages("hflights")
+```
+
+```{r}
+library(dplyr)
+library(hflights)
+library(ggplot2)
+#explore data (Houston flight departure - each row is a flight)
+data(hflights) #loads the data
+head(hflights)
+```
+
+# the dataset
+
+A data frame with 227,496 rows and 21 columns. This dataset contains all flights departing from Houston airports IAH (George Bush Intercontinental) and HOU (Houston Hobby). The data comes from the Research and Innovation Technology Administration at the Bureau of Transporation statistics: <http://www.transtats.bts.gov/> DatabaseInfo.asp?DB_ID=120&Link=0
+
+-   Year, Month, DayofMonth: date of departure
+-   DayOfWeek: day of week of departure (useful for removing weekend effects)
+-   DepTime, ArrTime: departure and arrival times (in local time, hhmm)
+-   UniqueCarrier: unique abbreviation for a carrier
+-   FlightNum: flight number
+-   TailNum: airplane tail number
+-   ActualElapsedTime: elapsed time of flight, in minutes
+-   AirTime: flight time, in minutes
+-   ArrDelay, DepDelay: arrival and departure delays, in minutes
+-   Origin, Dest origin and destination airport codes
+-   Distance: distance of flight, in miles
+-   TaxiIn, TaxiOut: taxi in and out times in minutes
+-   Cancelled: cancelled indicator: 1 = Yes, 0 = No
+-   CancellationCode:reasonforcancellation:A=carrier,B=weather,C=nationalairsystem, D = security
+-   Diverted: diverted indicator: 1 = Yes, 0 = No
+
+## as_tibble
+
+-   'as_tibble' will create a tibble data frame
+-   a tibble data frame is simply a wrapper for the data frame that prints nicely. Nothing will change in your analysis.
+
+```{r}
+flights <- as_tibble(hflights)
+flights
+```
+
+```{r}
+# if you want to see more rows of the tibble df
+print(flights, n=20)
+
+# if you want to see all the columns quickly coerce it to a normal data frame
+data.frame(head(flights))
+```
+
+## filter: Keep rows matching criteria (Subset observations)
+
+-   Base R approach to filtering forces you to repeat the name of the data frame
+-   dplyr approach is simpler to write and read
+-   Command structure (for all dplyr verbs):
+    -   first argument is a data frame
+    -   return value is a data frame
+    -   nothing is modified in place
+-   Note: dplyr generally does not preserve row names
+
+```{r}
+# base R approach to view all flights on January 1
+# note: you can use comma or ampersand to represent AND condition
+flights[flights$Month==1 & flights$DayofMonth==1, ]
+```
+
+```{r}
+# dplyr approach
+# note: you can use comma or ampersand to represent AND condition
+filter(flights, Month==1, DayofMonth==1)
+filter(flights, Month==1 & DayofMonth==1)
+filter(flights, DepDelay > 60)
+```
+
+```{r}
+# use pipe for OR condition
+filter(flights, UniqueCarrier=="AA" | UniqueCarrier=="UA")
+```
+
+```{r}
+# you can also use %in% operator
+filter(flights, UniqueCarrier %in% c("AA", "UA"))
+```
+
+## select: Pick columns by name (Subset variables)
+
+-   Base R approach is awkward to type and to read
+-   dplyr approach uses similar syntax to filter
+-   Like a SELECT in SQL
+
+```{r}
+# base R approach to select DepTime, ArrTime, and FlightNum columns
+flights[, c("DepTime", "ArrTime", "FlightNum")]
+```
+
+```{r}
+# dplyr approach
+select(flights, DepTime, ArrTime, FlightNum)
+```
+
+```{r}
+# use colon to select multiple contiguous columns, 
+# and use `contains` to match columns by name
+# note: `starts_with`, `ends_with`, and `matches` 
+#(for regular expressions) can also be used to match columns by name
+select(flights, Year:DayofMonth, contains("Taxi"), contains("Delay"))
+select(flights, contains("Num"), contains("Cancel"))
+```
+
+## Interlude: *Chaining* or *Pipelining*
+
+-   The dplyr way to perform multiple operations in one line is by nesting
+-   You Can write commands in a natural order by using the %\>% infix operator (which can be pronounced as *then*)
+
+```{r}
+# nesting method to select UniqueCarrier and DepDelay columns and filter for delays over 60 minutes
+filter(select(flights, UniqueCarrier, DepDelay), DepDelay > 60)
+```
+
+```{r}
+# chaining method
+flights %>%
+    select(UniqueCarrier, DepDelay) %>%
+    filter(DepDelay > 60)
+```
+
+-   Chaining increases readability significantly when there are many commands
+-   Operator is automatically imported from the magrittr package
+-   Can be used to replace nesting in R commands outside of dplyr
+-   Here's another unrelated example
+
+```{r}
+# create two vectors and calculate Euclidian distance between them
+x1 <- 1:5; x2 <- 2:6
+sqrt(sum((x1-x2)^2))
+```
+
+```{r}
+#chaining method
+(x1-x2)^2 %>% sum() %>% sqrt()
+```
+
+#arrange: Reorder rows
+
+```{r}
+# base R approach to select UniqueCarrier and DepDelay columns and sort by DepDelay
+flights[order(flights$DepDelay), c("UniqueCarrier", "DepDelay")]
+```
+
+```{r}
+flights %>% 
+  select(UniqueCarrier, DepDelay) %>% 
+  arrange(DepDelay)
+```
+
+This is ascending so it's giving the flights that left early first (-33 is 33 minutes early)
+
+```{r}
+# use `desc` for descending
+flights %>%
+    select(UniqueCarrier, DepDelay) %>%
+    arrange(desc(DepDelay))
+```
+
+## mutate: Add new variables
+
+```{r}
+# base R approach to create a new variable Speed (in mph)
+flights$AvgSpeed <- flights$Distance / flights$AirTime*60
+flights[, c("Distance", "AirTime", "AvgSpeed")]
+```
+
+```{r}
+flights %>%
+  select(Distance, AirTime) %>%
+  mutate(AvgSpeed = Distance/AirTime*60)
+```
+
+```{r}
+# store the new variable
+flights <- flights %>% mutate(Speed = Distance/AirTime*60)
+```
+
+## summarise: Reduce variables to values
+
+-   Primarily useful with data that can be grouped by one or more variables
+-   \`group_by' creates the groups that will be operated on
+-   summarise uses the provided aggregation function to summarise each group
+
+```{r}
+# base R approaches to calculate the average arrival delay to each destination
+head(with(flights, tapply(ArrDelay, Dest, mean, na.rm=TRUE)))
+head(aggregate(ArrDelay ~ Dest, flights, mean))
+```
+
+```{r}
+# dplyr approach: create a table grouped by Dest, and then summarise each group by taking the mean of ArrDelay
+flights %>%
+    group_by(Dest) %>%
+    summarise(avg_delay = mean(ArrDelay, na.rm=TRUE))
+```
+
+```{r}
+# dplyr approach: create a table grouped by Origin and Dest pairs, and then summarise each group by taking the mean of ArrDelay
+flights %>%
+    group_by(Origin, Dest) %>%
+    summarise(avg_delay = mean(ArrDelay, na.rm=TRUE))
+```
+
+-   'summarise_all', 'summarise_at', 'summarise_if' allow you to apply the same summary function to multiple columns at once
+-   Note: 'mutate_all', 'mutate_at', 'mutate_if' also available
+
+```{r}
+# for each carrier, calculate the percentage of flights cancelled or diverted
+flights %>% 
+  group_by(UniqueCarrier) %>%
+  summarise_at(c("Cancelled", "Diverted"), mean, na.rm=TRUE)
+```
+
+```{r}
+# for each carrier, calculate the minimum and maximum arrival and departure delays
+flights %>%
+    group_by(UniqueCarrier) %>%
+    summarise_at(c("ArrDelay","DepDelay"), min, na.rm=TRUE)
+```
+
+```{r}
+flights %>%
+    group_by(UniqueCarrier) %>%
+    summarise_at(c("ArrDelay","DepDelay"), max, na.rm=TRUE)
+```
+
+-   Helper function 'n()' counts the number of rows in a group
+-   Helper function 'n_distinct(vector)' counts the number of unique items in that vector
+
+```{r}
+# for each day of the year (this is only 2011 data), count the total number of flights and sort in descending order
+flights %>% 
+  group_by(Month, DayofMonth) %>%
+  summarise(flightcount=n()) %>%
+  arrange(desc(flightcount))
+```
+
+```{r}
+# rewrite more simply with the `tally` function
+flights %>%
+    group_by(Month, DayofMonth) %>%
+    tally(sort = TRUE)
+```
+
+```{r}
+# for each destination, count the total number of flights and the number of distinct planes that flew there
+flights %>%
+    group_by(Dest) %>%
+    summarise(flights_count = n(), plane_count = n_distinct(TailNum))
+```
+
+Grouping can sometimes be useful without summarising
+
+```{r}
+# for each destination, show the number of cancelled and not cancelled flights
+flights %>%
+    group_by(Dest) %>%
+    select(Cancelled) %>%
+    table() %>%
+    head()
+```
+
+```{r}
+# for each destination, show the number of cancelled and not cancelled flights
+flights %>%
+    filter(UniqueCarrier=="AA" | UniqueCarrier=="UA" | UniqueCarrier=="DL") %>%
+    group_by(Dest) %>%
+    select(Cancelled) %>%
+    mutate(pct_cancelled = mean(Cancelled)) %>%
+    as.data.frame(table()) %>%
+    ggplot(aes(x=Dest,fill=Cancelled)) + geom_bar()
+```
+
+```{r}
+# Create a Density plot of flight delays 
+flights %>%
+  count(ArrDelay) %>%
+  group_by(ArrDelay) %>%
+  mutate(freq = n / sum(n)) %>%
+  as.data.frame(table()) %>%
+  ggplot(aes(x=ArrDelay,fill=freq))+geom_density()
+```
+
+
+```{r}
+# for each carrier, show the number of cancelled and not cancelled flights
+flights %>%
+    group_by(UniqueCarrier) %>%
+    select(Cancelled) %>%
+    mutate(pct_cancelled = mean(Cancelled)) %>%
+    as.data.frame(table()) %>%
+    ggplot(aes(x=UniqueCarrier,fill=Cancelled)) + geom_bar()
+```
+
+```{r}
+#filter out Charter and Cargo Flights 
+flights %>%
+  filter(UniqueCarrier!="CO" & UniqueCarrier!="XE") %>%
+  group_by(UniqueCarrier) %>%
+  select(Cancelled) %>%
+  as.data.frame(table()) %>%
+  ggplot(aes(x=UniqueCarrier,fill=Cancelled))+geom_bar()
+
+#This seems like a large number of cancelled flights...
+```
+```{r}
+##Your Task is use the five dplyr functions covered  to recreate the bar chart above, but for each bar display the portion of cancelled flights vs. non-cancelled flights
+#Code below:
+
+
+```
+
+
+
+
+
+Think about how you can model this process using a pdf.Is there a way you can fit this data to a pdf? Feel free to use this resource: <https://cran.r-project.org/doc/contrib/Ricci-distributions-en.pdf>

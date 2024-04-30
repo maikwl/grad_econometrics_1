@@ -1,0 +1,265 @@
+---
+title: "Lab2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require("knitr")
+opts_knit$set(root.dir = "C:/Users/michailfragkias/Dropbox/Course.ECON521.GradEconometrics/Fall2022_SharedWithStudents/Labs")
+options(repos=c("<https://mirror.las.iastate.edu/CRAN/>"))
+```
+
+## Lab 2
+
+```{r}
+rm(list=ls())
+```
+
+## Variables, vectors, assignments of values, descriptive stats
+
+Let's start again with vector assignments - numeric values
+```{r}
+tree.heights <- c(4.3,7.1,6.3,5.2,3.2,2.1)
+```
+
+Note that the period can help in the naming variables
+```{r}
+tree.widths <- c(24.5, 30.2, 29.5, 26.7, 23.1, 21.5)
+tree.heights+tree.widths ##vector addition- does not make sense here :)
+z<-c(tree.heights,tree.widths)
+z
+sum(tree.heights) ##summation of elements
+mean(tree.heights)
+sd(tree.heights)
+length(tree.heights) ##length of vector
+max.tree.height <- max(tree.heights)
+max.tree.height
+```
+
+We can pick subsets of vectors, which can also be transformed on the fly.
+```{r}
+tree.heights[1]
+tree.heights[1:3]
+sqrt(tree.heights[1:3])
+tree.heights[c(5,3,2)]
+```
+
+Let's look at vector assignments with character values or logical values
+```{r}
+name <- "Lex Luthor"
+name
+cities <- c("Seattle", "San Diego", "Portland", "Boise")
+length(cities) # number of elements in the cities vector
+northern <- c(TRUE, FALSE, TRUE, TRUE) #an example of a logical variable
+cities[northern] #subseting using a logical variable
+```
+
+## Important Data Types
+We will work with only a subset of data types that R can handle, primarily character, numeric and logical.
+
+The character() command creates vector of the specified length with each element equal to an empty character:
+```{r}
+character(8) 
+length(character(8))
+as.character("8") #conversion of numeric to character
+is.character(8) #test
+is.character("8") #another test
+```
+
+The numeric() command creates a vector of the specified length with each element equal to zero
+
+```{r}
+numeric(8) 
+as.numeric(c("1980", "-8", "Geography")) #conversions
+as.numeric(c(FALSE, TRUE))
+is.numeric(c(8,8))
+is.numeric(c(8,8,8,"8"))
+```
+
+The logical() command creates vector of specified length with each element equal to FALSE
+```{r}
+logical(7) 
+!logical(7) #negation
+as.logical(c(7, 5, 0, -4, 5)) #conversion (non-zero elements are TRUE)
+as.logical(c(7, 5, 0, -4, 5)) * 1 #conversion with numeric logical values (0/1)
+as.logical(c(7, 5, 0, -4, 5)) + 0 #same thing
+as.logical(c("True", "T", "t", "FALSE", "Raspberry","9", "0", 0)) #notice what gets recognized
+```
+
+Logical vectors can be used for indexing
+```{r}
+data <- c(3, 6, 9, 99, 54, 32, -102)
+index <- (data>10) # create an logical index of values greater than 10 in the dataset
+index
+
+data[index]
+data[!index]
+sum(data)
+sum(data[index])
+```
+
+## Important Data Classes
+The Data Types we went over populate different data structures (or classes). We will work primarily with vectors, matrices, data frames, lists and factors
+
+###Vectors
+
+This is how you can alternatively create a vector with type and length defined: vector(mode="numeric", length=8). Note that if you don't define the mode, you will get logical
+```{r}
+vector(length=8) 
+```
+
+You can test if the class is vector. Let's create something that is not a vector
+```{r}
+tmp <- data.frame (a=10:15, b=15:20)
+tmp
+is.vector(tmp)
+is.vector(data)
+#as.vector(tmp)
+```
+
+###Matrices
+The matrix() command creates arrays that we recognize as matrices. We will work on matrix algebra later on in the semester.
+```{r}
+matrix(ncol=2,nrow=2)
+matrix(1:6) #matrix dimensions not defined
+matrix(1:6,ncol=2) #matrix dimensions using only ncol
+matrix(1:6, c(3,2)) #matrix dimensions using concatenate
+as.matrix(6:3)
+as.matrix(c(6:3)) #equivalent to the above
+is.matrix(as.matrix(6:3))
+```
+
+Matrix rows and columns can be named
+```{r}
+flow <- matrix(1:9, c(3,3), byrow=TRUE) #byrow=TRUE fills the matrix by rows
+flow
+colnames(flow) <- c("Col1","Col2","Col3")
+rownames(flow) <- c("Row1", "Row2", "Row3")
+flow
+```
+
+There are several functions that can summarize row or column data
+```{r}
+sumsofrows <- rowSums(flow)
+sumsofrows
+```
+
+But not that if the data class is not matrix, then you can name elements by the command names().
+```{r}
+z <- c(6,7,8)
+names(z) <- c("Six", "Seven", "Eight")
+z
+```
+
+## Exploring Data
+We will work with an example, the Phillips dataset, available as a .dta file
+
+If you need to, set your working directory:
+setwd("/Users/michailfragkias/Dropbox/Course.ECON521.GradEconometrics/Fall2020_ECON521_SharedWithStudents/Labs")
+
+```{r}
+library(foreign)
+phillips <- read.dta("Data/wool/phillips.dta")
+summary(phillips) # Provides basic descriptive statistics and frequencies.
+edit(phillips) # Open data editor - DON'T DO THAT!!!
+str(phillips) # Provides the structure of the dataset 
+names(phillips) # Lists variables in the dataset 
+head(phillips) # First 6 rows of dataset
+head(phillips, n=10)# First 10 rows of dataset
+head(phillips, n= -10) # All rows but the last 10 
+tail(phillips) # Last 6 rows
+tail(phillips, n=10) # Last 10 rows
+tail(phillips, n= -10) # All rows but the first 10 
+phillips[1:10, ] # First 10 rows
+phillips[1:10,1:3] # First 10 rows of data of the first 3 variables
+plot(unem ~ inf, data=phillips)
+```
+
+## Simple Plots
+```{r}
+library(graphics)
+x <- seq(100)
+y <- x^0.5
+plot(x,y)
+plot(x,y, type="p") #this is the default
+plot(x,y, type="l") #continuous lines
+plot(x,y, type="b") #for both
+plot(x,y, type="o") #for both overplotted
+plot(x,y, type="s") #for stair steps
+
+barplot(y,col="lightgreen")
+
+x <- c(1:5); y <- x # create some data 
+par(pch=22, col="red") # plotting symbol and color 
+par(mfrow=c(2,4)) # all plots on one page 
+opts = c("p","l","o","b","c","s","S","h") 
+for(i in 1:length(opts)){ 
+  heading = paste("type=",opts[i]) 
+  plot(x, y, type="n", main=heading) 
+  lines(x, y, type=opts[i]) 
+}
+```
+
+# Creating a supply and demand plot
+```{r}
+Q  <- seq(0,150)
+Ps <- -(10/40) + (1/40)*Q
+Pd <- (100/20) - (1/20)*Q
+plot(Q,Ps,xlab="Quantity (kg)",  ylab="Price (euros per kg)",type="l")
+lines(Q,Pd)
+text(130,2.6,"Supply")
+text(120,0,"Demand")
+# A simple way to add a straight line to an existing plot uses the abline function. 
+# Read abline as a-b line: a is the intercept and b is the slope or gradient of the line with equation y = a + bx. 
+# For instance, suppose that the demand schedule shifts to: 
+abline(a = 120/20, b = -1/20, lty = "dashed")
+```
+
+## Example: Pedometer Data
+```{r}
+peddata <-read.table("Data/pedometer.csv", header=TRUE, sep=",")
+head(peddata)
+x <- hist(peddata$Steps,col="lightblue")
+x <- hist(peddata$Steps,breaks=20,col="lightblue")
+plot(peddata$Steps ~ peddata$Observation,col="blue")
+#
+aggregate(peddata$Steps~peddata$Day, FUN=mean)
+
+myModel <- lm(peddata$Steps ~ peddata$Observation)
+summary(myModel)
+lines(fitted(myModel))
+#lines(fitted(loess(myModel)),col="red")
+```
+
+## Anscombe Quartet
+```{r}
+library(graphics)
+anscombe <- read.table("Data/anscombe.txt", header=TRUE)
+anscombe
+summary(anscombe)
+head(anscombe)
+means <- (c(mean(anscombe$x1), mean(anscombe$x2), mean(anscombe$x3), mean(anscombe$x4)))
+means
+
+lm1 <- lm(y1~x1, data=anscombe)
+summary(lm1)
+lm2 <- lm(y2~x2, data=anscombe)
+summary(lm2)
+lm3 <- lm(y3~x3, data=anscombe)
+summary(lm3)
+lm4 <- lm(y4~x4, data=anscombe)
+summary(lm4)
+
+# 4 figures arranged in 2 rows and 2 columns
+par(mfrow=c(2,2)) #par sets graphical parameters; mfrow defines a vector of how subsequent figures will be organized.
+plot(anscombe$x1,anscombe$y1, main="1") 
+abline(lm1)
+plot(anscombe$x2,anscombe$y2, main="2") 
+abline(lm2)
+plot(anscombe$x3,anscombe$y3, main="3") 
+abline(lm3)
+plot(anscombe$x4,anscombe$y4, main="4") 
+abline(lm4)
+```
+

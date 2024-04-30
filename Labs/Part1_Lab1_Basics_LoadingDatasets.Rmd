@@ -1,0 +1,297 @@
+---
+title: '#ECON 521 - LAB 1'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require("knitr")
+options(repos=c("<https://mirror.las.iastate.edu/CRAN/>"))
+```
+
+##Clear workspace
+If you want to clear your workspace (dataframes, variables, etc.)
+```{r}
+rm(list = ls()) #this is the command that clears your workspace; deletes previous work.
+```
+
+## The R installation program and packages
+
+The R installation program can be downloaded free of charge from http://www.r-project.org.
+
+Because R is a programming language and not just an econometrics program, most of the functions we will be interested in are available through packages. These can also be obtained from the R website.
+
+Local Install: obtain a package that does not come with the standard installation via the CRAN link on the above website. Under contrib you will find is a list of compressed packages ready for download.
+
+Alternately you can download and install packages at once from inside R by issuing a command
+
+``` {r eval=FALSE}
+install.packages("foreign",dep=TRUE, repos="http://cran.us.r-project.org")
+library(foreign)
+```
+
+It's better to install packages like this to also check whether they are already installed:
+
+``` {r eval=FALSE}
+if (!require("foreign")) {
+   install.packages("foreign")
+   library(foreign)
+}
+```
+
+This package allows you to read a lot of types of datasets (SAS, SPSS, Stata, etc.) Very useful. 
+
+A more complicated one involving multiple packages and a few other things...
+
+``` {r eval=FALSE}
+install.packages(c("car", "systemfit"), dep=TRUE, repos='http://cran.us.r-project.org')
+library(car)
+library(systemfit)
+
+if (!require("car")) {
+   install.packages("car")
+   library(car)
+}
+```
+
+The commands above should install the "car" and "systemfit" packages
+
+The 'repo' parameter is usually auto-configured, so there is normally no need to specify it. As versions of R change, you may need to be specific.
+
+The dependencies or 'dep' parameter indicates that R should download packages that these depend on as well, and is recommended. 
+
+Note: you must have administrator (or root) privileges to your computer to install the program and packages.
+
+
+## What is R?
+
+R is an implementation of the object-oriented mathematical programming language S.
+
+It is developed by statisticians around the world and is free software released under the GNU General Public License. 
+
+Syntactically and functionally it is very similar (if not identical) to S+ (popular stats package).
+
+## How is R Better Than Other Statistical Software?
+
+R is much more flexible than most software used by econometricians 
+
+Main reason: it is a modern mathematical programming language, not just a program that does regressions and tests. This means our analysis need not be restricted to the functions included in the default package. 
+
+An extensive and constantly expanding collection of packages online for use in many disciplines. 
+
+New algorithms and processes lead to corresponding packages on the R website. 
+
+Thus, R is always at the forefront of statistical knowledge. 
+
+Because of the ease and flexibility of programming in R it is easy to extend.
+
+The S language is the de facto standard for statistical science. 
+
+Reading the statistical literature, we find that examples and even pseudo-code are written in R-compatible syntax. 
+
+Most users have a statistical background, the jargon sometimes differs from what an econometrician may expect. It allows the econometrician to tap into the work of these innovative statisticians.
+
+Code written for R can be run on many computational platforms with or without a graphical user interface
+
+R comes standard with some of the most flexible and powerful graphics routines available anywhere.
+
+R is completely free for any use
+
+
+This package allows you to read a lot of types of datasets (SAS, SPSS, Stata, etc.) Very useful. 
+
+A more complicated one involving multiple packages and a few other things...
+
+
+
+Take a minute to look at Farnsworth book (in our Dropbox) list of relevant packages...
+
+
+##Ways to interact with R
+
+Interact directly with R through the command prompt.
+
+Let's say you want to see what is your working directory (where R is trying to save/load files from)
+
+```{r}
+getwd()
+```
+
+The prompt and what we type are in one color; the output R returns is in a different color. You can control the font colors though 'GUI preferences' or 'Tools/Global Options' in the edit menu.
+
+Pressing the up arrow will generally cycle through commands from the history. 
+
+R is case sensitive and that every function call has parentheses at the end. 
+
+A researcher typically does not issues commands directly 
+
+We can load script files that we have previously written, which may include new function definitions.
+
+Script files generally have the extension ".R" 
+
+Contain commands as you would enter them at the prompt
+
+Loading a file named "Test.R" would use the command:
+```{r}
+source("Test.R")
+```
+
+Remember that you have to have the right path
+setwd("E:/Dropbox/Course.ECON521.GradEconometrics/Fall2022_ECON521_SharedFolder/Labs")
+or, if you are working on a Mac
+setwd("/Users/yourname/Dropbox/Course.ECON521.GradEconometrics/Fall2022_ECON521_SharedFolder/Labs'")
+
+# Loading packages
+Every command we will use is a function that is stored in one of the packages. Often we have to load packages before working. Many of the common functions are in the 'basepackage', which is loaded by default. For access to any other function, however, we have to load the appropriate package.
+
+For example,
+```{r}
+library(foreign)
+```
+loads the package that contains the functions for reading and writing data that is formatted for other programs, such as SAS and Stata. 
+Alternately, we can pull down the 'Packages' menu and select 'Load package...'. 
+Instead of 'library()' we could also have used 'require()'. 
+The major difference between these functions is that library() returns an error if the requested package is not installed, whereas require() returns a warning. 
+
+The latter function is generally used by functions that need to load packages, while the former is generally called by the user.
+
+# Getting Help in R
+```{r}
+?qt			#Preceding the command with a question mark gives a description of its usage and functionality.
+help(qt)	#Same with giving it as an argument to help() 
+help.start() 
+help.search("covariance")
+RSiteSearch("SUR")
+```
+
+# To Exit R we issue the command q(). Let's not do it right now so that we continue working! 
+
+# Working with Data
+
+Let's look at some interactive features of R:
+```{r}
+5 # if you type in a 5 at the prompt returns a 5
+5+4 # adding two numbers, the sum is returned
+5^3 # will compute 5 to the power of 3
+```
+
+R handles many types of data storage objects, such as numbers, vectors, matrices, strings, and dataframes 
+The command rm() removes the data object given it as an argument. 
+
+We can determine the type of an object using the command typeof() or determine its class type (which is often more informative) using class().
+
+##Numbers
+Let's create a numeric object called 'g', which contains the value 7.5. 
+```{r}
+g <- 7.5	# define the object
+g 			  # view the object
+ls()		  # show a list of all data objects currently available. 
+rm(g)		  # removes the data object given it as an argument. 
+ls()
+g <- 7.5
+typeof(g) #storage mode of any object (integer, double, list, etc.)
+class(g)
+```
+
+
+## Vectors
+R creates column vectors using the c() (concatenate) command 
+```{r}
+f <- c(7.5,6,5)
+```
+The t() command transposes f to create a 1x3 matrix because vectors are always column vectors. 
+```{r}
+fprime <- t(f)
+fprime
+```
+The command cbind() concatenates the objects given it side by side: into an array if they are vectors, and into a single dataframe if they are columns of named data. 
+```{r}
+dat <- cbind(c(7.5,6,5),c(1,2,3))
+ls()
+f[1] # To view the second element of f
+```
+
+Note that in general the square brackets [ ] are used to pull out an entry from a vector or matrix. 
+To view the first and third elements of the vector: 
+
+```{r}
+f[c(2,3)] # note that x[1,3] would fail 
+```
+
+In general, the round brackets ( ) are used in functions like c() 
+An example of how to create a 2 x 3 matrix:
+```{r}
+y <- matrix(c(1,2,3,4,3,4),2,3)
+y
+```
+
+The last two arguments of the matrix function are the number of rows and columns, respectively. If you would like the numbers to be entered by row instead of the default by column, add an additional argument, byrow=T. So, the command would look like: matrix(vector of data, numrows, numcols, byrow=T) 
+
+Inspecting the matrics To
+```{r}
+y[1,] # view the first row of y
+y[,c(2,3)] #view the second and third columns of y
+```
+
+# Loading data!
+## To load a .txt file:
+```{r}
+getwd()
+#setwd("E:/Dropbox/Course.ECON521.GradEconometrics/Fall2020_ECON521_SharedWithStudents/")
+df1 <- read.table("Data/Data_TextFile.txt", header=FALSE)
+head(df1)
+```
+
+## To load a csv file:
+```{r}
+df2 <- read.table("Data/Data_CSVFile.csv", header = FALSE, sep = ",")
+head(df2)
+```
+Be careful with the header option when you read tables. The file included column names and we declared that there is no header... we can correct this mistake.
+
+```{r}
+df3 <- read.table("Data/Data_CSVFile.csv", header = TRUE, sep = ",")
+head(df3)
+```
+
+## To load an .xls file. We'll cover this another time.
+```{r}
+install.packages("XLConnect", dep=T)
+library(XLConnect)
+df4 <- readWorksheetFromFile("Data/Data_XLSFile.xlsx", sheet=1)
+head(df4)
+```
+
+## To load a Stata .dta file
+```{r}
+library(foreign)
+wdata <- read.dta("Data/wool/WAGE1_v12.dta")
+head(wdata)
+```
+
+# Run a basic regression
+
+We use the lm() (linear model) command. You have two options: 
+
+(1) define the dataframe as an option in the lm() command
+```{r}
+canned.ols1 <- lm(wage~educ+exper+tenure, data=wdata)
+summary(canned.ols1)
+```
+
+(2) use the dataframe name along with the variable names
+```{r}
+canned.ols2 <- lm(wdata$wage~wdata$educ+wdata$exper+wdata$tenure)
+summary(canned.ols2)
+```
+
+```{r}
+plot(canned.ols1)
+```
+
+```{r
+ggplot(wage, aes(educ, age)
+```
+

@@ -1,0 +1,124 @@
+---
+title: "LabXX_LogisticDistributionExample"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Logistic Distribution Basics
+
+(Lab adapted from a post in Rpubs by Riaz Khan (SDSU), August 20, 2017 (https://rpubs.com/riazakhan94/logstcdistbasics)
+
+The logistic distribution is a continuous probability distribution. It has two parameters and is defined for all real numbers. The probability density function (PDF) plot is symmetric about the mean. The cumulative density function (CDF) of the logistic distribution is equivalent to logistic function in mathematics (used in logistic regression and feed-forward neural networks).
+
+## Mathematical Notation
+The logistic distribution is given by:
+$X\text{~}Logistic(\mu, s),\ s>0$
+Here $\mu$ is called the *location* parameter and $s$ is called the *scale* parameter. The location parameters makes the PDF slide horizontally along X axis, the scale paramter makes the PDF tails fat or skinny.
+
+## The probability density function (PDF)
+The PDF of logistic distribution is given by:
+
+$f_X(x)=\frac {e^{-\frac{x-\mu}{s} } }   {s(1+e^{-\frac{x-\mu}{s} })^2  },\text{ where } -\infty<x<\infty$
+
+## The cumulative density function (CDF)
+The CDF of logistic distribution is given by:
+
+$F_X(x)= \int^x_{-\infty}xf_X(x)dx= \frac {1}  {1+e^{-\frac{x-\mu}{s}  }}, \text{ where } -\infty<x<\infty$
+
+## The Mean
+
+$E(X)=\int_{-\infty}^{\infty} xf_X(x)dx= \int_{-\infty}^{\infty} \frac {xe^{-\frac{x-\mu}{s} } }   {s(1+e^{-\frac{x-\mu}{s} })^2  }dx=\mu$
+
+## The Variance
+
+$V(X)=E(X^2)-(E(X))^2=\int_{-\infty}^{\infty} \frac {x^2e^{-\frac{x-\mu}{s} } }   {s(1+e^{-\frac{x-\mu}{s} })^2  }dx-\mu^2=\frac{s^2\pi^2}{3}$
+
+## Some Properties
+
+The PDF can be written as an alternate form with a positive sign in the exponent.
+
+$f_X(x)=\frac {e^{\frac{x-\mu}{s} } }   {s(1+e^{\frac{x-\mu}{s} })^2  },\text{ where } -\infty<x<\infty$
+
+This can easily be proved by expanding the square term in the denominator and multiplying both numerator and denominator by $e^\frac{2(x-\mu)}{s}$.
+
+The PDF of the logistic distribution is symmetric about the mean.
+
+$f_X(\mu+c)=\frac{e^{-c/s}}{s(1+e^{-c/s})^2}=\frac{e^{c/s}}{s(1+e^{c/s})^2}=f_X(\mu-c)$
+
+The PDF can be written as a function of the CDF. We can write,
+
+$f_X(x)=\frac{1}{s}F_X(x)(1-F_X(x))$
+
+Proof: 
+
+$f_X(x)=\frac {e^{-\frac{x-\mu}{s} } }   {s(1+e^{-\frac{x-\mu}{s} })^2  } =\frac {1+e^{-\frac{x-\mu}{s} }-1 }   {s(1+e^{-\frac{x-\mu}{s} })^2  }$
+
+$=\frac{1}{s} \{ \frac{1}{1+e^{-\frac{x-\mu}{s}} }-\frac{1}{ \{ 1+e^{-\frac{x-\mu}{s}} \}^2     } \}$
+
+So, 
+
+$f_X(x)=\frac{1}{s}(F_X(x)-(F_X(x))^2)=\frac{1}{s}F_X(x)(1-F_X(x))$
+
+This property is very useful. The CDF of logistic distribution, which is called the logistic function, is often used as the activation function in feed-forward neural network. 
+
+``A feedforward neural network is an artificial neural network wherein connections between the nodes do not form a cycle. As such, it is different from its descendant: recurrent neural networks. The feedforward neural network was the first and simplest type of artificial neural network devised.''
+
+To estimate the weight parameters, often we need to compute the first derivative of the activation function, which is the PDF function, and we have a straight forward formula for the derivative (PDF of logistic) in terms of the activation function itself (CDF of logistic).
+
+# Standard Logistic Distribution
+
+The standard logistic distribution is the logistic distribution with the parameters $\mu=0$ and $s=1$. The mean and the variance of this version are zero and $\frac{\pi^2}{3}$ respectively.
+
+## Shapes
+
+Remember that the PDF is symmetric about the mean. First figure below shows the PDF and CDF plot for different logistic distribution with fixed scale parameter ($s$) and varying mean ($\mu$) values. As being symmetric, the mean, median, and the mode are all same for the logistic distribution. So, the CDF curves pass 0.5 at their respective mean values. The curves are just shifted versions of one another. It is expected since the variance does not depend on the location parameter $\mu$.
+
+
+```{r}
+pdf=function(x,mu,s){
+  k=(x-mu)/s
+  return(exp(-k)/(s*(1+exp(-k))^2))
+}
+cdf=function(x,mu,s){
+  k=(x-mu)/s
+  return(1/(1+exp(-k)))
+}
+x=seq(-10,13,0.01)
+## PDF
+layout(matrix(1:2,nrow=1))
+plot(x,pdf(x,-1,1),type="l",lty=3,lwd=2,ylab="PDF")
+lines(x,pdf(x,0,1),type="l",lty=1,lwd=2,col="gray50")
+lines(x,pdf(x,1,1),type="l",lty=5,lwd=2,col="gray70")
+abline(v=c(0,1,-1),col=2, lty=3)
+legend("topright",c("mu = -1, s = 1","mu = 0, s = 1","mu = 1, s = 1"),
+       bty="n",lty=c(3,1,5),col=c("black","gray50","gray70"),lwd=2)
+## CDF
+plot(x,cdf(x,-1,1),type="l",lty=3,lwd=2,ylab="CDF")
+lines(x,cdf(x,0,1),type="l",lty=1,lwd=2,col="gray40")
+lines(x,cdf(x,1,1),type="l",lty=5,lwd=2,col="gray70")
+abline(h=0.5, v=c(0,1,-1),col=2, lty=3)
+legend("topleft",c("mu = -1, s = 1","mu = 0, s = 1","mu = 1, s = 1"),
+       bty="n",lty=c(3,1,5),col=c("black","gray40","gray70"),lwd=2)
+```
+In the second figure, the distributions have different scale parameters ($s$), but same mean ($\mu$) values. Since the mean values were kept fixed, all the PDF have the peak at same $x$ value and all the CDF have value 0.5 at the mean $x$. However, the curves become wider as we increase $s$. It is expected since the variance is proportional to the square of the $s$ values.
+
+```{r}
+## PDF
+layout(matrix(1:2,nrow=1))
+plot(x,pdf(x,0,1),type="l",lty=3,lwd=2,ylab="PDF")
+lines(x,pdf(x,0,2),type="l",lty=1,lwd=2,col="gray40")
+lines(x,pdf(x,0,3),type="l",lty=5,lwd=2,col="gray70")
+abline(v=0,col=2, lty=3)
+legend("topright",c("mu = 0, s = 1","mu = 0, s = 2","mu = 0, s = 3"),
+       bty="n",lty=c(3,1,5),col=c("black","gray40","gray70"),lwd=2)
+## CDF
+plot(x,cdf(x,0,1),type="l",lty=3,lwd=2,ylab="CDF")
+lines(x,cdf(x,0,2),type="l",lty=1,lwd=2,col="gray40")
+lines(x,cdf(x,0,3),type="l",lty=5,lwd=2,col="gray70")
+abline(v=0,col=2, lty=3)
+legend("topleft",c("mu = 0, s = 1","mu = 0, s = 2","mu = 0, s = 3"),
+       bty="n",lty=c(3,1,5),col=c("black","gray40","gray70"),lwd=2)
+```

@@ -1,0 +1,146 @@
+---
+title: "Lab 4 - Advanced Plots"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Install/load packages
+
+``` {r eval=FALSE}
+if (!require("gapminder")) {
+   install.packages("gapminder")
+}
+library(gapminder)
+
+if (!require("ggplot2")) {
+   install.packages("ggplot2")
+}
+library(ggplot2)
+```
+
+# Plotting using ggplot
+I've derived this lab from Healy's Data Visualization book (https://press.princeton.edu/titles/13826.html). A draft version of the manuscript is here: http://socviz.co/. We will use the gapminder data to make our first plots. Let's look at the dataset and tell the ggplot() function what data we are using.
+
+```{r}
+gapminder
+names(gapminder)
+p <- ggplot(data=gapminder)
+```
+
+At this point ggplot knows our data, but not more than that. We need to give it variables to plot. That is done using the mapping option:
+
+```{r}
+p <- ggplot(data=gapminder,
+            mapping=aes(x = gdpPercap,
+                        y = lifeExp))
+```
+Here we have given the ggplot() function two arguments instead of one: data and mapping. The data argument tells ggplot where to find the variables it is about to use. This saves us from having to tediously dig out the name of each variable in full. Instead, any mentions of variables will be looked for here first.
+
+Next, the mapping. The mapping argument is not a data object, nor is it a character string. Instead, it's a function. (Remember, functions can be nested inside other functions.) The arguments we give to the aes function are a sequence of definitions that ggplot will use later. Here they say, "The variable on the x-axis is going to be gdpPercap, and the variable on the y-axis is going to be lifeExp." The aes() function does not say where variables with those names are to be found. That's because ggplot() is going to assume things with that name are in the object given to the data argument.
+
+The mapping = aes(...) argument links variables to things you will see on the plot. The x and y values are the most obvious ones. Other aesthetic mappings can include, for example, color, shape, size, and line type (whether a line is solid or dashed, or some other pattern). We'll see examples in a minute. A mapping does not directly say what particular, e.g., colors or shapes will be on the plot. Rather they say which variables in the data will be represented by visual elements like a color, a shape, or a point on the plot area.
+
+Well, let's plot it!
+```{r}
+p
+```
+
+Well, bummer! What went wrong?
+
+The p object has been created by the ggplot() function, and already has information in it about the mappings we want, together with a lot of other information added by default. (If you want to see just how much information is in the p object already, try asking for str(p).) However, we haven't given it any instructions get about what sort of plot to draw. We need to add a layer to the plot. This means picking a geom_ function. We will use geom_point(). It knows how to take x and y values and plot them in a scatterplot.
+
+```{r}
+p + geom_point()
+```
+
+Bam! 
+
+We can of course do this directly:
+```{r}
+p <- ggplot(data=gapminder,
+            mapping=aes(x = gdpPercap,
+                        y = lifeExp)) + geom_point()
+p
+```
+```{r}
+p <- ggplot(data=gapminder,
+            mapping=aes(x = gdpPercap,
+                        y = lifeExp))
+p+geom_smooth()
+```
+
+```{r}
+p+geom_point()+geom_smooth()
+```
+
+Booyah! 
+
+The console message R tells you the geom_smooth() function is using a method called gam, which in this case means it has fit a generalized additive model. This suggests that maybe there are other methods that geom_smooth() understands, and which we might tell it to use instead.
+
+Try adding method = "lm" (for *linear model*) as an argument to geom_smooth():
+
+```{r}
+p+geom_point()+geom_smooth(method="lm")
+```
+That was crappy!
+
+In our plot, the data is quite bunched up against the left side. Gross Domestic Product per capita is not normally distributed across our country years. The x-axis scale would probably look better if it were transformed from a linear scale to a log scale. For this we can use a function called scale_x_log10(). As you might expect this function scales the x-axis of a plot to a log 10 basis. To use it we just add it to the plot:
+
+```{r}
+p+geom_point()+geom_smooth(method="gam")+scale_x_log10()
+```
+
+How about the log-log plot?
+```{r}
+p+geom_point()+geom_smooth(method="gam")+scale_x_log10()+scale_y_log10()
+```
+
+## Mapping aesthetics (aes)
+
+Let's define the property *color* as representing the gapminder variable continent: 
+
+```{r}
+p <- ggplot(data=gapminder,
+            mapping=aes(x = gdpPercap,
+                        y = lifeExp,
+                        color=continent))
+p+geom_point()+geom_smooth(method="loess")+scale_x_log10()+scale_y_log10()
+```
+
+```{r}
+p+geom_point(alpha=0.3)+
+  geom_smooth(method="gam")+
+  scale_x_log10(labels=scales::dollar)+
+  labs(x = "GDP Per Capita", y = "Life Expectancy in Years", title = "Economic Growth and Life Expectancy", subtitle = "Data points are country-years", caption = "Source: Gapminder.")
+```
+
+```{r}
+ggsave(filename = "my_figure.png")
+ggsave(filename = "my_figure.pdf")
+
+```
+
+# Other simple plots
+```{r}
+df <- data.frame(
+  group = c("Male", "Female", "Child"),
+  value = c(33, 20, 47)
+  )
+head(df)
+# Barplot
+bp<- ggplot(df, aes(x="", y=value, fill=group))+
+geom_bar(width = 1, stat = "identity")
+bp
+# Pie chart
+pie <- bp + coord_polar("y", start=0)
+pie
+
+# Apply blank theme
+library(scales)
+pie + theme(axis.text.x=element_blank())+
+  geom_text(aes(y = value/3 + c(0, cumsum(value)[-length(value)]), 
+                label = percent(value/100)), size=5)
+```
